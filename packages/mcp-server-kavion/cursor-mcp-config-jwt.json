@@ -1,0 +1,45 @@
+{
+  "mcpServers": {
+    "kavion-thermal-user-auth": {
+      "command": "node",
+      "args": [
+        "/home/behnam/git/KavApps/kavion-v0/temp/supabase-mcp/packages/mcp-server-kavion/dist/transports/stdio.js",
+        "--user-email=your-email@example.com",
+        "--user-password=your-password",
+        "--read-only",
+        "--app-url=http://localhost:3000"
+      ],
+      "env": {
+        "SUPABASE_URL": "https://your-project.supabase.co",
+        "SUPABASE_ANON_KEY": "your-anon-key-here"
+      }
+    },
+    "kavion-thermal-jwt": {
+      "command": "node",
+      "args": [
+        "/home/behnam/git/KavApps/kavion-v0/temp/supabase-mcp/packages/mcp-server-kavion/dist/transports/stdio.js",
+        "--jwt-token=your-pre-generated-jwt-token",
+        "--read-only",
+        "--app-url=http://localhost:3000"
+      ],
+      "env": {
+        "SUPABASE_URL": "https://your-project.supabase.co",
+        "SUPABASE_ANON_KEY": "your-anon-key-here"
+      }
+    },
+    "kavion-thermal-env": {
+      "command": "node",
+      "args": [
+        "/home/behnam/git/KavApps/kavion-v0/temp/supabase-mcp/packages/mcp-server-kavion/dist/transports/stdio.js",
+        "--read-only",
+        "--app-url=http://localhost:3000"
+      ],
+      "env": {
+        "SUPABASE_URL": "https://your-project.supabase.co",
+        "SUPABASE_ANON_KEY": "your-anon-key-here",
+        "USER_EMAIL": "your-email@example.com",
+        "USER_PASSWORD": "your-password"
+      }
+    }
+  }
+}
