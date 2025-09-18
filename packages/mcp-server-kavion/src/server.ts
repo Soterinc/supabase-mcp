@@ -3,6 +3,7 @@ import packageJson from '../package.json' with { type: 'json' };
 import { createJwtPlatform } from './platform/jwt-platform.js';
 import { getDatabaseTools } from './tools/database-operation-tools.js';
 import { getDocsTools } from './tools/docs-tools.js';
+import { getKavionDomainTools } from './tools/kavion-domain-tools.js';
 
 const { version } = packageJson;
 
@@ -109,6 +110,30 @@ export function createKavionMcpServer(options: KavionMcpServerOptions): ReturnTy
           projectId,
           readOnly,
         }));
+      }
+
+      // Add Kavion domain tools (always enabled)
+      if (platform.database) {
+        // Generate JWT token if not provided
+        let finalJwtToken = jwtToken;
+        if (!finalJwtToken && userEmail && userPassword) {
+          const { createClient } = await import('@supabase/supabase-js');
+          const supabase = createClient(supabaseUrl, supabaseAnonKey);
+          const { data } = await supabase.auth.signInWithPassword({
+            email: userEmail,
+            password: userPassword,
+          });
+          finalJwtToken = data.session?.access_token;
+        }
+        
+        if (finalJwtToken) {
+          Object.assign(tools, getKavionDomainTools({
+            supabaseUrl,
+            supabaseAnonKey,
+            appUrl,
+            jwtToken: finalJwtToken,
+          }));
+        }
       }
 
       console.log(`🚀 Total tools available: ${Object.keys(tools).length}`);
