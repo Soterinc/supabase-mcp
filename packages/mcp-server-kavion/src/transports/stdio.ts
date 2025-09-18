@@ -15,9 +15,10 @@ async function main() {
       ['user-email']: userEmail,
       ['user-password']: userPassword,
       ['jwt-token']: jwtToken,
+      ['project-ref']: projectId,
       ['app-url']: appUrl,
       ['read-only']: readOnly,
-      ['enable-sql']: enableSqlTools,
+      ['features']: featuresArg,
       ['version']: showVersion,
       ['help']: showHelp,
     },
@@ -25,43 +26,37 @@ async function main() {
     options: {
       ['supabase-url']: { 
         type: 'string',
-        short: 'u',
       },
       ['supabase-anon-key']: { 
         type: 'string',
-        short: 'k',
       },
       ['user-email']: { 
         type: 'string',
-        short: 'e',
       },
       ['user-password']: { 
         type: 'string',
-        short: 'p',
       },
       ['jwt-token']: { 
         type: 'string',
-        short: 'j',
+      },
+      ['project-ref']: { 
+        type: 'string',
       },
       ['app-url']: { 
         type: 'string',
-        short: 'a',
       },
       ['read-only']: { 
         type: 'boolean', 
         default: false,
       },
-      ['enable-sql']: { 
-        type: 'boolean', 
-        default: true,
+      ['features']: { 
+        type: 'string',
       },
       ['version']: { 
         type: 'boolean',
-        short: 'v',
       },
       ['help']: { 
         type: 'boolean',
-        short: 'h',
       },
     },
   });
@@ -78,16 +73,17 @@ async function main() {
 Usage: mcp-server-kavion [options]
 
 Options:
-  -u, --supabase-url <url>     Supabase project URL
-  -k, --supabase-anon-key <key> Supabase anonymous key
-  -e, --user-email <email>     User email for authentication
-  -p, --user-password <pass>   User password for authentication
-  -j, --jwt-token <token>      Pre-generated JWT token (alternative to email/password)
-  -a, --app-url <url>          Frontend app URL (default: http://localhost:3000)
+      --supabase-url <url>     Supabase project URL
+      --supabase-anon-key <key> Supabase anonymous key
+      --user-email <email>     User email for authentication
+      --user-password <pass>   User password for authentication
+      --jwt-token <token>      Pre-generated JWT token (alternative to email/password)
+      --project-ref <ref>      Project reference ID (optional)
+      --app-url <url>          Frontend app URL (default: http://localhost:3000)
       --read-only              Enable read-only mode for SQL operations
-      --enable-sql             Enable SQL database tools (default: true)
-  -v, --version                Show version number
-  -h, --help                   Show this help message
+      --features <features>    Comma-separated features to enable (database,docs)
+      --version                Show version number
+      --help                   Show this help message
 
 Environment Variables:
   SUPABASE_URL                 Supabase project URL
@@ -121,7 +117,9 @@ Examples:
   const finalUserEmail = userEmail ?? process.env.USER_EMAIL;
   const finalUserPassword = userPassword ?? process.env.USER_PASSWORD;
   const finalJwtToken = jwtToken;
+  const finalProjectId = projectId;
   const finalAppUrl = appUrl ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const finalFeatures = featuresArg ? featuresArg.split(',') : ['database', 'docs'];
 
   if (!finalSupabaseUrl || !finalSupabaseAnonKey) {
     console.error(`❌ Error: Missing required Supabase configuration
@@ -156,9 +154,10 @@ Run 'mcp-server-kavion --help' for more information.`);
       userEmail: finalUserEmail,
       userPassword: finalUserPassword,
       jwtToken: finalJwtToken,
+      projectId: finalProjectId,
       appUrl: finalAppUrl,
       readOnly,
-      enableSqlTools,
+      features: finalFeatures,
     });
 
     const transport = new StdioServerTransport();

@@ -1,32 +1,10 @@
 import { createMcpServer, type Tool } from '@supabase/mcp-utils';
-import { createClient } from '@supabase/supabase-js';
 import packageJson from '../package.json' with { type: 'json' };
-import { getKavionDomainTools } from './tools/kavion-domain-tools.js';
-import { getOfficialDatabaseTools } from './tools/official-database-tools.js';
+import { createJwtPlatform } from './platform/jwt-platform.js';
+import { getDatabaseTools } from './tools/database-operation-tools.js';
+import { getDocsTools } from './tools/docs-tools.js';
 
 const { version } = packageJson;
-
-/**
- * Generate JWT token from user email and password
- */
-async function generateJwtToken(supabaseUrl: string, supabaseAnonKey: string, email: string, password: string): Promise<string> {
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-  
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
-    throw new Error(`Authentication failed: ${error.message}`);
-  }
-
-  if (!data.session?.access_token) {
-    throw new Error('No access token received from authentication');
-  }
-
-  return data.session.access_token;
-}
 
 export type KavionMcpServerOptions = {
   /**
@@ -55,25 +33,32 @@ export type KavionMcpServerOptions = {
   jwtToken?: string;
   
   /**
-   * Frontend app URL for generating clickable links
+   * The project ID to scope the server to (for compatibility with official server)
    */
-  appUrl?: string;
+  projectId?: string;
   
   /**
-   * Read-only mode for SQL operations
+   * Executes database queries in read-only mode if true
    */
   readOnly?: boolean;
   
   /**
-   * Enable official SQL tools alongside domain tools
+   * Features to enable
+   * Options: 'database', 'docs'
    */
-  enableSqlTools?: boolean;
+  features?: string[];
+  
+  /**
+   * Frontend app URL for generating clickable links
+   */
+  appUrl?: string;
 };
 
+const DEFAULT_FEATURES = ['docs', 'database'];
+
 /**
- * Creates a hybrid MCP server that combines:
- * 1. Domain-specific thermal/RGB imagery tools (rich UX)
- * 2. Official SQL database tools (query flexibility)
+ * Creates a Supabase MCP server that uses JWT authentication instead of PAT
+ * Structure mirrors the official server but with user-level authentication
  */
 export function createKavionMcpServer(options: KavionMcpServerOptions): ReturnType<typeof createMcpServer> {
   const {
@@ -82,19 +67,20 @@ export function createKavionMcpServer(options: KavionMcpServerOptions): ReturnTy
     userEmail,
     userPassword,
     jwtToken,
-    appUrl = 'http://localhost:3000',
+    projectId,
     readOnly = false,
-    enableSqlTools = true,
+    features = DEFAULT_FEATURES,
+    appUrl = 'http://localhost:3000',
   } = options;
 
   const server = createMcpServer({
-    name: 'kavion-thermal-imagery',
+    name: 'kavion-supabase-jwt',
     version,
     async onInitialize(info) {
-      console.log(`🔥❄️ Kavion Thermal/RGB MCP Server v${version} initialized`);
+      console.log(`🔥❄️ Kavion Supabase MCP Server v${version} initialized`);
       console.log(`🔗 App URL: ${appUrl}`);
       console.log(`🔒 Read-only mode: ${readOnly}`);
-      console.log(`🛠️ SQL tools enabled: ${enableSqlTools}`);
+      console.log(`🛠️ Features: ${features.join(', ')}`);
       if (userEmail) console.log(`👤 User: ${userEmail}`);
       if (jwtToken) console.log(`🔐 Pre-generated JWT token provided`);
       if (userEmail && userPassword) console.log(`🔐 Will generate JWT from user credentials`);
@@ -102,43 +88,27 @@ export function createKavionMcpServer(options: KavionMcpServerOptions): ReturnTy
     tools: async () => {
       const tools: Record<string, Tool> = {};
 
-      // Generate JWT token if user credentials provided
-      let finalJwtToken = jwtToken;
-      if (!finalJwtToken && userEmail && userPassword) {
-        console.log(`🔐 Generating JWT token for user: ${userEmail}`);
-        try {
-          finalJwtToken = await generateJwtToken(supabaseUrl, supabaseAnonKey, userEmail, userPassword);
-          console.log(`✅ JWT token generated successfully`);
-        } catch (error) {
-          console.error(`❌ Failed to generate JWT token:`, error);
-          throw new Error(`Authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
-
-      if (!finalJwtToken) {
-        throw new Error('Authentication required: Provide either jwtToken or userEmail+userPassword');
-      }
-
-      // Add domain-specific tools (your custom thermal/RGB tools)
-      const domainTools = getKavionDomainTools({ 
-        supabaseUrl, 
-        supabaseAnonKey, 
-        appUrl,
-        jwtToken: finalJwtToken,
+      // Create JWT platform (similar to official API platform)
+      const platform = await createJwtPlatform({
+        supabaseUrl,
+        supabaseAnonKey,
+        userEmail,
+        userPassword,
+        jwtToken,
       });
-      Object.assign(tools, domainTools);
-      console.log(`✅ Loaded ${Object.keys(domainTools).length} domain-specific tools`);
 
-      // Optionally add official SQL tools
-      if (enableSqlTools) {
-        const sqlTools = getOfficialDatabaseTools({ 
-          supabaseUrl, 
-          supabaseAnonKey, 
+      // Add docs tools if enabled (similar to official server)
+      if (features.includes('docs')) {
+        Object.assign(tools, getDocsTools({ appUrl }));
+      }
+
+      // Add database tools if enabled (similar to official server)
+      if (features.includes('database') && platform.database) {
+        Object.assign(tools, getDatabaseTools({
+          database: platform.database,
+          projectId,
           readOnly,
-          jwtToken: finalJwtToken,
-        });
-        Object.assign(tools, sqlTools);
-        console.log(`✅ Loaded ${Object.keys(sqlTools).length} SQL database tools`);
+        }));
       }
 
       console.log(`🚀 Total tools available: ${Object.keys(tools).length}`);
