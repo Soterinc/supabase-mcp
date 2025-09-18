@@ -1,102 +1,119 @@
-# Kavion Custom MCP Server
+# Kavion Supabase MCP Server
 
-A hybrid MCP server that combines domain-specific thermal/RGB drone imagery tools with flexible SQL database access.
+> JWT-authenticated MCP server for secure user-level Supabase database access
 
-## Features
+![Kavion MCP Server](https://img.shields.io/badge/MCP-Server-blue) ![JWT](https://img.shields.io/badge/Auth-JWT-green) ![RLS](https://img.shields.io/badge/Security-RLS-red) ![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)
 
-### 🔥❄️ Domain-Specific Tools
-- **`list_datasets`** - Lists thermal/RGB datasets with clickable links
-- **`smart_image_search`** - Search and display images with thumbnails  
-- **`ask_about_dataset`** - Detailed dataset analysis and statistics
-- **`get_quick_stats`** - Quick database overview
+A **user-focused MCP server** that provides secure, JWT-authenticated access to Supabase databases with Row Level Security (RLS) enforcement. Built on the official Supabase MCP framework but designed for **end-users** rather than project administrators.
 
-### 🗃️ SQL Database Tools (Optional)
-- **`execute_sql`** - Execute raw SQL queries
+## 🎯 Purpose
+
+Unlike the official `@supabase/mcp-server-supabase` which is designed for **project management** using Personal Access Tokens (PAT), this server enables **user-level data access** using JWT authentication and RLS policies.
+
+| Official Supabase MCP | Kavion Supabase MCP |
+|-----------------------|---------------------|
+| **Target**: Developers/Admins | **Target**: End Users |
+| **Auth**: Personal Access Token | **Auth**: User Email/Password → JWT |
+| **Access**: Project Management | **Access**: User Data with RLS |
+| **Tools**: 20+ admin tools | **Tools**: 6 focused data tools |
+| **Security**: Admin privileges | **Security**: Database-level RLS |
+
+## 🚀 Features
+
+### 🔐 **JWT Authentication Flow**
+- Accepts user **email/password** credentials
+- Automatically **generates JWT tokens**
+- Enforces **Row Level Security (RLS)** policies
+- Provides **user-specific data access**
+
+### 🛠️ **Database Tools**
+- **`execute_sql`** - Execute raw SQL queries with RLS enforcement
 - **`list_tables`** - List database tables and schemas
 - **`list_extensions`** - List PostgreSQL extensions
-- **`get_table_info`** - Detailed table information
+- **`apply_migration`** - Apply database migrations (with proper permissions)
+- **`get_table_info`** - Get detailed table information
+- **`search_docs`** - Search documentation and help
 
-## Installation & Usage
+### 🔒 **Security Features**
+- **Database-level security** via RLS policies
+- **User-specific data filtering** based on organization membership
+- **JWT token management** with automatic generation
+- **Read-only mode** support for safe querying
+- **Untrusted data boundaries** for SQL results
+
+## 📦 Installation
+
+### Prerequisites
+
+- Node.js 18+ 
+- pnpm (for monorepo management)
+- Supabase project with RLS policies configured
 
 ### Build from Source
 
 ```bash
+# Clone the repository
+git clone https://github.com/your-username/mcp.git
+cd mcp
+
 # Install dependencies
 pnpm install
 
 # Build the server
+cd packages/mcp-server-kavion
 pnpm build
 
 # Test the CLI
 node dist/transports/stdio.js --help
 ```
 
-### Configuration Options
+## 🔧 Configuration
+
+### CLI Arguments
 
 ```bash
-# Basic usage with environment variables
-mcp-server-kavion
+# With user credentials (recommended)
+mcp-server-kavion \
+  --user-email user@example.com \
+  --user-password mypassword \
+  --read-only
 
-# With explicit configuration  
-mcp-server-kavion --supabase-url https://xxx.supabase.co --supabase-key your-key
+# With pre-generated JWT token
+mcp-server-kavion \
+  --jwt-token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... \
+  --read-only
 
-# Read-only mode without SQL tools
-mcp-server-kavion --read-only --enable-sql=false
-
-# With JWT authentication (RLS enabled)
-mcp-server-kavion --jwt-token your-jwt-token --user-id user-uuid
+# With custom features
+mcp-server-kavion \
+  --user-email user@example.com \
+  --user-password mypassword \
+  --features database,docs \
+  --read-only
 ```
 
-## Cursor Integration
+### Environment Variables
 
-### Option 1: Read-Only Domain Tools Only
+```bash
+export SUPABASE_URL=https://your-project.supabase.co
+export SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+export USER_EMAIL=user@example.com
+export USER_PASSWORD=mypassword
+```
+
+## 🎪 Cursor Integration
+
+### Basic Configuration
+
 ```json
 {
   "mcpServers": {
-    "kavion-thermal": {
+    "kavion-supabase": {
       "command": "node",
       "args": [
-        "/path/to/dist/transports/stdio.js",
+        "/path/to/mcp-server-kavion/dist/transports/stdio.js",
         "--read-only",
-        "--enable-sql=false"
-      ],
-      "env": {
-        "SUPABASE_URL": "https://your-project.supabase.co",
-        "SUPABASE_SERVICE_ROLE_KEY": "your-service-role-key"
-      }
-    }
-  }
-}
-```
-
-### Option 2: Hybrid Domain + SQL Tools
-```json
-{
-  "mcpServers": {
-    "kavion-thermal-full": {
-      "command": "node",
-      "args": [
-        "/path/to/dist/transports/stdio.js",
-        "--enable-sql=true"
-      ],
-      "env": {
-        "SUPABASE_URL": "https://your-project.supabase.co", 
-        "SUPABASE_SERVICE_ROLE_KEY": "your-service-role-key"
-      }
-    }
-  }
-}
-```
-
-### Option 3: JWT Authentication with RLS
-```json
-{
-  "mcpServers": {
-    "kavion-thermal-jwt": {
-      "command": "node",
-      "args": [
-        "/path/to/dist/transports/stdio.js",
-        "--jwt-token=your-jwt-token"
+        "--user-email=user@example.com",
+        "--user-password=mypassword"
       ],
       "env": {
         "SUPABASE_URL": "https://your-project.supabase.co",
@@ -107,49 +124,265 @@ mcp-server-kavion --jwt-token your-jwt-token --user-id user-uuid
 }
 ```
 
-## Environment Variables
+### Environment Variables (Secure)
 
-- `SUPABASE_URL` - Your Supabase project URL
-- `SUPABASE_SERVICE_ROLE_KEY` - Service role key (admin access)
-- `SUPABASE_ANON_KEY` - Anonymous key (for JWT mode)
-- `NEXT_PUBLIC_APP_URL` - Frontend app URL for clickable links
+```json
+{
+  "mcpServers": {
+    "kavion-supabase": {
+      "command": "node",
+      "args": [
+        "/path/to/mcp-server-kavion/dist/transports/stdio.js",
+        "--read-only"
+      ],
+      "env": {
+        "SUPABASE_URL": "https://your-project.supabase.co",
+        "SUPABASE_ANON_KEY": "your-anon-key",
+        "USER_EMAIL": "user@example.com",
+        "USER_PASSWORD": "mypassword"
+      }
+    }
+  }
+}
+```
 
-## Architecture
+### JWT Token Mode
 
-This server combines two approaches:
+```json
+{
+  "mcpServers": {
+    "kavion-supabase": {
+      "command": "node",
+      "args": [
+        "/path/to/mcp-server-kavion/dist/transports/stdio.js",
+        "--jwt-token=your-jwt-token",
+        "--read-only"
+      ],
+      "env": {
+        "SUPABASE_URL": "https://your-project.supabase.co",
+        "SUPABASE_ANON_KEY": "your-anon-key"
+      }
+    }
+  }
+}
+```
 
-### Domain-Specific Tools (Rich UX)
-- Provides formatted responses with thumbnails and links
-- Understands thermal/RGB imagery concepts
-- Returns structured markdown for better presentation
-- Optimized for common thermal imagery workflows
+### My Current Cursor Configuration
 
-### SQL Tools (Query Flexibility)  
-- Allows complex database queries via raw SQL
-- Respects RLS policies when using JWT authentication
-- Provides escape hatch for advanced analysis
-- Returns JSON data with security boundaries
+```json
+"kavion-thermal-jwt": {
+      "command": "node",
+      "args": [
+        "/home/behnam/git/KavApps/kavion-v0/temp/supabase-mcp/packages/mcp-server-kavion/dist/transports/stdio.js",
+        "--read-only",
+        "--features=database,docs",
+        "--user-email=behnam.moradi@kavai.com",
+        "--user-password=<password>"
+      ],
+      "env": {
+        "SUPABASE_URL": "https://vwovgsttefakrjcaytin.supabase.co",
+        "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3b3Znc3R0ZWZha3JqY2F5dGluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NTgxNDUsImV4cCI6MjA2MzMzNDE0NX0.3ZzaKTX6PS68f8-VPkwqr5ng4-Iwu5_aNlAffoM7zDQ"
+      }
+    }
 
-## Comparison with Official Supabase MCP
+```
 
-| Feature | Official Server | Kavion Custom Server |
-|---------|----------------|---------------------|
-| **Approach** | Query-first SQL access | Domain-first with SQL option |
-| **User Experience** | Technical, requires SQL | User-friendly, domain-aware |
-| **Output Format** | Raw JSON with warnings | Rich markdown with images |
-| **Domain Knowledge** | Generic database | Thermal/RGB imagery expertise |
-| **Authentication** | Service role + RLS | Service role, JWT, or dual auth |
+## ⚙️ Setup Requirements
 
-## Development
+### 1. RPC Function (Required)
 
-Based on the official Supabase MCP server architecture but customized for thermal/RGB drone imagery workflows.
+Create this function in your Supabase SQL Editor:
 
-### Key Dependencies
-- `@supabase/mcp-utils` - MCP framework utilities
-- `@supabase/supabase-js` - Supabase client
-- `zod` - Schema validation
+```sql
+CREATE OR REPLACE FUNCTION execute_sql_query(sql_query text)
+RETURNS json
+LANGUAGE plpgsql
+SECURITY INVOKER  -- Important: Uses caller's privileges for RLS
+AS $$
+DECLARE
+  result json;
+  rec record;
+  results json[] := '{}';
+BEGIN
+  FOR rec IN EXECUTE sql_query LOOP
+    results := results || row_to_json(rec);
+  END LOOP;
+  RETURN array_to_json(results);
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE EXCEPTION 'SQL Error: %', SQLERRM;
+END;
+$$;
+```
 
-### Build System
-- TypeScript compilation with `tsup`
-- ESM and CJS output formats
-- CLI entry point with argument parsing
+### 2. RLS Policies (Recommended)
+
+Ensure your tables have proper RLS policies:
+
+```sql
+-- Enable RLS on your tables
+ALTER TABLE datasets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE images ENABLE ROW LEVEL SECURITY;
+
+-- Example policy for datasets
+CREATE POLICY "Users can only see datasets from their organizations" 
+ON datasets FOR SELECT 
+TO authenticated 
+USING (
+  (owner_id = auth.uid()) OR 
+  (organization_id IS NOT NULL AND is_org_member_secure(organization_id))
+);
+```
+
+## 🎯 Usage Examples
+
+### Query Your Data
+
+```sql
+-- List your accessible datasets
+SELECT name, slug, description FROM datasets ORDER BY name;
+
+-- Count images by type
+SELECT 
+  CASE 
+    WHEN filename LIKE '%_T.%' THEN 'Thermal'
+    WHEN filename LIKE '%_V.%' THEN 'RGB'
+    ELSE 'Other'
+  END as image_type,
+  COUNT(*) as count
+FROM images 
+GROUP BY image_type;
+
+-- Get GPS coverage
+SELECT 
+  d.name as dataset,
+  COUNT(*) as total_images,
+  COUNT(CASE WHEN i.metadata ? 'GPSLatitude' THEN 1 END) as gps_images
+FROM datasets d
+LEFT JOIN images i ON d.id = i.dataset_id
+GROUP BY d.name
+ORDER BY d.name;
+```
+
+### Explore Database Schema
+
+```sql
+-- List all your accessible tables
+SELECT table_name, 
+       (SELECT COUNT(*) FROM information_schema.columns 
+        WHERE table_name = t.table_name) as column_count
+FROM information_schema.tables t
+WHERE table_schema = 'public'
+ORDER BY table_name;
+```
+
+## 🔒 Security
+
+### Authentication Flow
+
+1. **User provides email/password** → Server generates JWT token
+2. **JWT token set** → Supabase client authenticated  
+3. **RLS policies activated** → Database enforces user-specific access
+4. **Queries filtered** → User only sees their organization's data
+
+### Security Features
+
+- ✅ **No admin privileges** - Users can't access other users' data
+- ✅ **RLS enforcement** - Database-level security policies
+- ✅ **JWT expiration** - Tokens have built-in expiration
+- ✅ **Read-only mode** - Optional restriction to SELECT queries only
+- ✅ **Untrusted data boundaries** - SQL results wrapped with security warnings
+
+### Security Testing
+
+Test with different users to verify RLS:
+
+```bash
+# Admin user - sees all accessible datasets
+mcp-server-kavion --user-email admin@company.com --user-password pass
+
+# Limited user - sees only their organization's datasets  
+mcp-server-kavion --user-email user@company.com --user-password pass
+```
+
+## 🆚 Comparison with Official Server
+
+| Feature | Official @supabase/mcp-server-supabase | Kavion mcp-server-kavion |
+|---------|---------------------------------------|-------------------------|
+| **Authentication** | Personal Access Token (PAT) | User Email/Password → JWT |
+| **Target Users** | Supabase developers/admins | Application end-users |
+| **Access Level** | Project management | User data with RLS |
+| **Tool Count** | 20+ tools | 6 focused tools |
+| **Security Model** | Admin privileges | User-level RLS |
+| **Use Case** | Manage Supabase projects | Query user data securely |
+| **Data Access** | Management API | Direct DB + RLS |
+| **Setup Complexity** | Simple (just PAT) | Requires RLS setup |
+
+## 🏗️ Architecture
+
+### Built On
+- **@supabase/mcp-utils** - Official MCP framework
+- **@supabase/supabase-js** - Supabase client library
+- **TypeScript** - Type-safe development
+- **tsup** - Fast TypeScript bundler
+
+### Platform Layer
+- **JWT Platform** - Custom platform implementation
+- **Database Operations** - RLS-aware SQL execution
+- **Documentation** - Built-in help system
+
+### Tool Structure
+```
+src/
+├── server.ts              # Main server creation
+├── platform/
+│   ├── jwt-platform.ts    # JWT authentication platform
+│   └── types.ts           # Platform type definitions
+├── tools/
+│   ├── database-operation-tools.ts  # SQL and schema tools
+│   └── docs-tools.ts      # Documentation search
+└── transports/
+    └── stdio.ts           # CLI entry point
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**1. "Could not find function execute_sql_query"**
+- Create the RPC function in your Supabase SQL Editor (see Setup Requirements)
+
+**2. "Authentication failed"**
+- Verify user email/password are correct
+- Check SUPABASE_URL and SUPABASE_ANON_KEY
+
+**3. "Can see all data (RLS not working)"**
+- Verify RPC function uses `SECURITY INVOKER`
+- Check RLS policies are properly configured
+- Test with users who have limited organization access
+
+**4. "No datasets visible"**
+- Check user is member of organizations that own datasets
+- Verify RLS policies allow organization member access
+
+## 📄 License
+
+Apache 2.0 - Same as official Supabase MCP server
+
+## 🤝 Contributing
+
+This server is based on the official Supabase MCP server architecture. Contributions welcome for:
+- Additional user-level tools
+- Better error handling
+- Enhanced documentation
+- Security improvements
+
+## 🔗 Related Projects
+
+- **[@supabase/mcp-server-supabase](https://github.com/supabase/mcp)** - Official project management server
+- **[@supabase/mcp-server-postgrest](https://github.com/supabase/mcp)** - PostgREST API server
+- **[Model Context Protocol](https://modelcontextprotocol.io/)** - MCP specification
+
+---
+
+**Built for users who need secure, JWT-authenticated access to their Supabase data without admin privileges.** 🔐✨
