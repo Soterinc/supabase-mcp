@@ -30,10 +30,15 @@
     "@supabase/mcp-utils": "workspace:^",
     "@supabase/supabase-js": "^2.39.3",
     "common-tags": "^1.8.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "fastmcp": "^3.17.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@total-typescript/tsconfig": "^1.0.4",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
     "@types/node": "^22.8.6",
     "tsup": "^8.3.5",
     "typescript": "^5.6.3"

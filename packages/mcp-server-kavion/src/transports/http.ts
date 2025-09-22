@@ -1,7 +1,4 @@
-#!/usr/bin/env node
-
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import express from 'express';
 import cors from 'cors';
@@ -34,7 +31,7 @@ for (let i = 0; i < args.length; i++) {
       break;
     case '--help':
       console.log(`
-Usage: node http.js [options]
+Usage: node http.cjs [options]
 
 Options:
   --apiUrl <url>        Supabase API URL (required)
@@ -45,7 +42,7 @@ Options:
   --help                Show this help message
 
 Example:
-  node http.js --apiUrl https://your-project.supabase.co --apiKey your-key --userEmail user@example.com --userPassword password
+  node http.cjs --apiUrl https://your-project.supabase.co --apiKey your-key --userEmail user@example.com --userPassword password
       `);
       process.exit(0);
       break;
@@ -76,78 +73,9 @@ const server = new Server(
 // Create Kavion MCP server instance
 const kavionServer = createKavionMcpServer({
   supabaseUrl: apiUrl,
-  supabaseKey: apiKey,
+  supabaseAnonKey: apiKey,
   userEmail,
   userPassword,
-});
-
-// Set up tool handlers
-server.setRequestHandler(ListToolsRequestSchema, async () => {
-  return {
-    tools: [
-      {
-        name: 'execute_sql',
-        description: 'Execute SQL queries on the database',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            query: {
-              type: 'string',
-              description: 'SQL query to execute',
-            },
-          },
-          required: ['query'],
-        },
-      },
-      {
-        name: 'list_tables',
-        description: 'List tables in the database',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            schemas: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'List of schemas to query',
-            },
-          },
-        },
-      },
-      {
-        name: 'search_docs',
-        description: 'Search documentation',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            query: {
-              type: 'string',
-              description: 'Search query',
-            },
-          },
-          required: ['query'],
-        },
-      },
-    ],
-  };
-});
-
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args } = request.params;
-
-  try {
-    switch (name) {
-      case 'execute_sql':
-        return await kavionServer.executeSql(args.query);
-      case 'list_tables':
-        return await kavionServer.listTables(args.schemas || ['public']);
-      case 'search_docs':
-        return await kavionServer.searchDocs(args.query);
-      default:
-        throw new Error(`Unknown tool: ${name}`);
-    }
-  } catch (error) {
-    throw new Error(`Tool execution failed: ${error.message}`);
-  }
 });
 
 // HTTP endpoints
@@ -165,16 +93,24 @@ app.post('/mcp', async (req, res) => {
     const { method, params } = req.body;
     
     if (method === 'tools/list') {
-      const result = await server.request({
+      // Create a mock request object for the MCP server
+      const mockRequest = {
         method: 'tools/list',
         params: {},
-      });
+      };
+      
+      // Get the tools list from the Kavion MCP server
+      const result = await kavionServer.request(mockRequest, ListToolsRequestSchema);
       res.json({ result });
     } else if (method === 'tools/call') {
-      const result = await server.request({
+      // Create a mock request object for the MCP server
+      const mockRequest = {
         method: 'tools/call',
         params,
-      });
+      };
+      
+      // Execute the tool call on the Kavion MCP server
+      const result = await kavionServer.request(mockRequest, CallToolRequestSchema);
       res.json({ result });
     } else {
       res.status(400).json({ error: 'Unknown method' });

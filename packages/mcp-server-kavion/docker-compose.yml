@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  kavion-mcp-server:
+    build:
+      context: ../../
+      dockerfile: Dockerfile.kavion
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # Supabase configuration - set these via environment variables or .env file
+      - SUPABASE_URL=${SUPABASE_URL:-https://vwovgsttefakrjcaytin.supabase.co}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3b3Znc3R0ZWZha3JqY2F5dGluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NTgxNDUsImV4cCI6MjA2MzMzNDE0NX0.3ZzaKTX6PS68f8-VPkwqr5ng4-Iwu5_aNlAffoM7zDQ}
+      - USER_EMAIL=${USER_EMAIL:-behnammoradi026@gmail.com}
+      - USER_PASSWORD=${USER_PASSWORD:-Behnam1993!}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - kavion-network
+
+networks:
+  kavion-network:
+    driver: bridge

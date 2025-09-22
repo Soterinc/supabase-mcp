@@ -1,0 +1,64 @@
+# Use Node.js 20 LTS as base image
+FROM node:20-alpine AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Copy workspace files
+COPY ../../package.json ../../pnpm-lock.yaml ../../pnpm-workspace.yaml ./
+COPY ../../packages/mcp-utils/package.json ./packages/mcp-utils/
+COPY ./package.json ./packages/mcp-server-kavion/
+
+# Install dependencies using pnpm
+RUN corepack enable pnpm && pnpm install --frozen-lockfile
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+
+# Copy workspace files
+COPY ../../package.json ../../pnpm-lock.yaml ../../pnpm-workspace.yaml ./
+COPY ../../packages/mcp-utils ./packages/mcp-utils
+COPY . ./packages/mcp-server-kavion
+
+# Copy node_modules from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages/mcp-utils/node_modules ./packages/mcp-utils/node_modules
+COPY --from=deps /app/packages/mcp-server-kavion/node_modules ./packages/mcp-server-kavion/node_modules
+
+# Build the workspace
+RUN corepack enable pnpm && pnpm build
+
+# Production image, copy all the files and run the server
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Create a non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 mcpuser
+
+# Copy the built application
+COPY --from=builder /app/packages/mcp-server-kavion/dist ./dist
+COPY --from=builder /app/packages/mcp-server-kavion/node_modules ./node_modules
+COPY --from=builder /app/packages/mcp-server-kavion/package.json ./package.json
+
+# Change ownership to the non-root user
+RUN chown -R mcpuser:nodejs /app
+USER mcpuser
+
+# Expose the port
+EXPOSE 3000
+
+ENV PORT=3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+# Start the HTTP MCP server
+CMD ["node", "dist/transports/http.js"]
