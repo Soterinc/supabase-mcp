@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { Tool } from '@supabase/mcp-utils';
+import { DATABASE_CONTEXT } from '../database-context.js';
 
 export type DocsToolsOptions = {
   appUrl: string;
@@ -16,8 +17,14 @@ export function getDocsTools({ appUrl }: DocsToolsOptions): Record<string, Tool>
         query: z.string().describe('Search query for documentation'),
       }),
       execute: async ({ query }) => {
-        // Simple documentation search - you can enhance this
+        // Enhanced documentation search including database context
         const docs = [
+          {
+            title: 'Database Schema and Context',
+            content: 'Comprehensive database schema, relationships, and SQL query patterns for the Kavion thermal/RGB imagery analysis platform.',
+            href: 'kavion://database-context',
+            isResource: true,
+          },
           {
             title: 'Thermal/RGB Image Analysis',
             content: 'Learn how to analyze thermal and RGB drone imagery pairs for industrial inspections.',
@@ -53,8 +60,14 @@ export function getDocsTools({ appUrl }: DocsToolsOptions): Record<string, Tool>
         const response = [`Found ${relevantDocs.length} documentation result(s) for "${query}":`];
         
         relevantDocs.forEach((doc, i) => {
-          response.push(`\n${i + 1}. **[${doc.title}](${doc.href})**`);
-          response.push(`   ${doc.content}`);
+          if (doc.isResource) {
+            response.push(`\n${i + 1}. **${doc.title}** (MCP Resource)`);
+            response.push(`   ${doc.content}`);
+            response.push(`   Access via: \`kavion://database-context\``);
+          } else {
+            response.push(`\n${i + 1}. **[${doc.title}](${doc.href})**`);
+            response.push(`   ${doc.content}`);
+          }
         });
 
         return response.join('\n');

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "kavion-simple-server": {
+      "command": "node",
+      "args": [
+        "/home/behnam/git/KavApps/kavion-v0/supabase-mcp/packages/mcp-server-kavion/remote-wrapper/simple-server.cjs"
+      ],
+      "env": {
+        "PORT": "3000",
+        "SUPABASE_URL": "https://vwovgsttefakrjcaytin.supabase.co",
+        "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3b3Znc3R0ZWZha3JqY2F5dGluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NTgxNDUsImV4cCI6MjA2MzMzNDE0NX0.3ZzaKTX6PS68f8-VPkwqr5ng4-Iwu5_aNlAffoM7zDQ"
+      }
+    }
+  }
+}

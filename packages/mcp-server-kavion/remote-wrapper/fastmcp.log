@@ -1,0 +1,55 @@
+nohup: ignoring input
+/usr/lib/python3.10/asyncio/events.py:80: DeprecationWarning: The run_sse_async method is deprecated (as of 2.3.2). Use run_http_async for a modern (non-SSE) alternative, or create an SSE app with `fastmcp.server.http.create_sse_app` and run it directly.
+  self._context.run(self._callback, *self._args)
+
+
+╭─ FastMCP 2.0 ──────────────────────────────────────────────────────────────╮
+│                                                                            │
+│        _ __ ___ ______           __  __  _____________    ____    ____     │
+│       _ __ ___ / ____/___ ______/ /_/  |/  / ____/ __ \  |___ \  / __ \    │
+│      _ __ ___ / /_  / __ `/ ___/ __/ /|_/ / /   / /_/ /  ___/ / / / / /    │
+│     _ __ ___ / __/ / /_/ (__  ) /_/ /  / / /___/ ____/  /  __/_/ /_/ /     │
+│    _ __ ___ /_/    \__,_/____/\__/_/  /_/\____/_/      /_____(_)____/      │
+│                                                                            │
+│                                                                            │
+│                                                                            │
+│    🖥️  Server name:     Kavion Thermal/RGB MCP Server                       │
+│    📦 Transport:       SSE                                                 │
+│    🔗 Server URL:      http://0.0.0.0:8000/sse/                            │
+│                                                                            │
+│    📚 Docs:            https://gofastmcp.com                               │
+│    🚀 Deploy:          https://fastmcp.cloud                               │
+│                                                                            │
+│    🏎️  FastMCP version: 2.11.2                                              │
+│    🤝 MCP version:     1.12.3                                              │
+│                                                                            │
+╰────────────────────────────────────────────────────────────────────────────╯
+
+
+[09/22/25 08:47:22] INFO     Starting MCP server 'Kavion          server.py:1522
+                             Thermal/RGB MCP Server' with                       
+                             transport 'sse' on                                 
+                             http://0.0.0.0:8000/sse/                           
+/home/behnam/.local/lib/python3.10/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+  warnings.warn(  # deprecated in 14.0 - 2024-11-09
+/home/behnam/.local/lib/python3.10/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+  from websockets.server import WebSocketServerProtocol
+INFO:     Started server process [22405]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+✅ Local MCP server started
+🚀 Starting FastMCP Remote Server on port 8000
+📡 Server URL: http://localhost:8000/mcp
+❤️  Health check: http://localhost:8000/health
+INFO:     127.0.0.1:34600 - "GET /sse/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36654 - "GET /sse/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44438 - "GET /sse/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47214 - "GET /sse/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57990 - "POST /sse/messages/?session_id=1306365f0cc84c4dbdb599d1c469996e HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:32808 - "GET /sse/ HTTP/1.1" 200 OK
+INFO:     Shutting down
+ERROR:    Cancel 0 running task(s), timeout graceful shutdown exceeded
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [22405]

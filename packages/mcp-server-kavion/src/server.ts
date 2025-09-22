@@ -1,9 +1,10 @@
-import { createMcpServer, type Tool } from '@supabase/mcp-utils';
+import { createMcpServer, type Tool, resources, jsonResource, jsonResourceResponse } from '@supabase/mcp-utils';
 import packageJson from '../package.json' with { type: 'json' };
 import { createJwtPlatform } from './platform/jwt-platform.js';
 import { getDatabaseTools } from './tools/database-operation-tools.js';
 import { getDocsTools } from './tools/docs-tools.js';
 import { getKavionDomainTools } from './tools/kavion-domain-tools.js';
+import { DATABASE_CONTEXT } from './database-context.js';
 
 const { version } = packageJson;
 
@@ -77,6 +78,19 @@ export function createKavionMcpServer(options: KavionMcpServerOptions): ReturnTy
   const server = createMcpServer({
     name: 'kavion-supabase-jwt',
     version,
+    resources: resources('kavion', [
+      jsonResource('/database-context', {
+        name: 'Database Context',
+        description: 'Comprehensive database schema and context for LLM SQL generation',
+        async read(uri) {
+          return jsonResourceResponse(uri, {
+            content: DATABASE_CONTEXT,
+            mimeType: 'text/markdown',
+            lastModified: new Date().toISOString(),
+          });
+        },
+      }),
+    ]),
     async onInitialize(info) {
       console.log(`🔥❄️ Kavion Supabase MCP Server v${version} initialized`);
       console.log(`🔗 App URL: ${appUrl}`);

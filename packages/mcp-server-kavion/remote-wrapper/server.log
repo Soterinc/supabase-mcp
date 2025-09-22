@@ -1,0 +1,16 @@
+nohup: ignoring input
+🚀 Starting Kavion MCP Server...
+🚀 Kavion MCP Remote Server running on port 3000
+📡 HTTP endpoint: http://localhost:3000/mcp
+❤️  Health check: http://localhost:3000/health
+MCP Server: 🚀 Starting Kavion Thermal/RGB MCP Server v1.0.0
+✅ MCP Server is ready
+MCP Server: ✅ Server connected and ready!
+Error forwarding to MCP server: Error: Request timeout
+    at Timeout._onTimeout (/home/behnam/git/KavApps/kavion-v0/supabase-mcp/packages/mcp-server-kavion/remote-wrapper/fixed_server.cjs:126:18)
+    at listOnTimeout (node:internal/timers:581:17)
+    at process.processTimers (node:internal/timers:519:7)
+Error forwarding to MCP server: Error: Request timeout
+    at Timeout._onTimeout (/home/behnam/git/KavApps/kavion-v0/supabase-mcp/packages/mcp-server-kavion/remote-wrapper/fixed_server.cjs:126:18)
+    at listOnTimeout (node:internal/timers:581:17)
+    at process.processTimers (node:internal/timers:519:7)
