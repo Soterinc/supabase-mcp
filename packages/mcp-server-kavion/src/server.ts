@@ -54,6 +54,11 @@ export type KavionMcpServerOptions = {
    * Frontend app URL for generating clickable links
    */
   appUrl?: string;
+  
+  /**
+   * Custom database context content (overrides default)
+   */
+  databaseContext?: string;
 };
 
 const DEFAULT_FEATURES = ['docs', 'database'];
@@ -73,6 +78,7 @@ export function createKavionMcpServer(options: KavionMcpServerOptions): ReturnTy
     readOnly = false,
     features = DEFAULT_FEATURES,
     appUrl = 'http://localhost:3000',
+    databaseContext,
   } = options;
 
   const server = createMcpServer({
@@ -83,8 +89,31 @@ export function createKavionMcpServer(options: KavionMcpServerOptions): ReturnTy
         name: 'Database Context',
         description: 'Comprehensive database schema and context for LLM SQL generation',
         async read(uri) {
+          // Use custom database context if provided, otherwise fall back to default
+          let contextContent = databaseContext || process.env.DATABASE_CONTEXT;
+          
+          // If no custom context provided, try to load from local database_context.md
+          if (!contextContent) {
+            try {
+              const fs = await import('fs');
+              const path = await import('path');
+              const localContextFile = path.join(process.cwd(), 'database_context.md');
+              if (fs.existsSync(localContextFile)) {
+                contextContent = fs.readFileSync(localContextFile, 'utf-8');
+                console.log(`✅ Auto-loaded database context from: ${localContextFile}`);
+              }
+            } catch (error) {
+              console.log(`⚠️ Could not load local database_context.md: ${error}`);
+            }
+          }
+          
+          // Fall back to default if no custom context found
+          if (!contextContent) {
+            contextContent = DATABASE_CONTEXT;
+          }
+          
           return jsonResourceResponse(uri, {
-            content: DATABASE_CONTEXT,
+            content: contextContent,
             mimeType: 'text/markdown',
             lastModified: new Date().toISOString(),
           });
