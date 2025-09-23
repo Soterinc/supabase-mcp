@@ -53,7 +53,13 @@ This is a PostgreSQL database for a thermal and RGB drone imagery analysis platf
 
 **Sample Data**:
 - "TRC-090122-3/S1003632.JPG" (from Torrance 2023)
-- "DJI_202408071955_004/DJI_20240807200020_0080_V.JPG" (thermal imagery)
+- "DJI_202408071955_004/DJI_20240807200020_0080_V.JPG" (RGB imagery)
+- "front_camera_1750352374.986814_T.jpg" (thermal imagery)
+
+**Image Naming Conventions**:
+- **Thermal images**: End with \`_T.jpg\` or \`_T.\` (e.g., \`image_T.jpg\`)
+- **RGB images**: End with \`_V.jpg\` or \`_V.\` (e.g., \`image_V.jpg\`)
+- **General images**: May contain keywords like "thermal", "rgb", "camera"
 
 #### \`annotations\` (Analysis Results)
 **Purpose**: AI-generated annotations and analysis results
@@ -371,7 +377,11 @@ GROUP BY i.id, i.filename;
 
 -- Find thermal images
 SELECT * FROM images 
-WHERE filename ILIKE '%thermal%' OR filename ILIKE '%_V.JPG';
+WHERE filename ILIKE '%thermal%' OR filename ILIKE '%_T.jpg' OR filename ILIKE '%_T.%';
+
+-- Find RGB images
+SELECT * FROM images 
+WHERE filename ILIKE '%rgb%' OR filename ILIKE '%_V.jpg' OR filename ILIKE '%_V.%';
 \`\`\`
 
 ### Gas Sensor Analysis
